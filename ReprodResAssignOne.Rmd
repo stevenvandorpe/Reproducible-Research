@@ -1,0 +1,50 @@
+
+#Load Data
+
+```{r}
+data <- read.csv('repdata/activity.csv')
+```
+
+##Clean and aggregate columns
+
+```{r}
+library(dplyr)
+data$date <- as.Date(data$date, '%Y-%m-%d')
+data$year <- as.integer(substr(as.character(data$date), start=1, stop = 4))
+data$dayoftheweek <- as.factor(weekdays(data$date))
+data$dayoftheweek <- ordered(data$dayoftheweek, levels= c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
+head(data)
+```
+
+## 1. What is mean total number of steps taken per day?
+
+###Analyse number of steps per day
+
+```{r}
+perday <- group_by(data, day = data$date)
+perday <- summarize(perday, totalsteps = sum(steps, na.rm=TRUE))
+barplot(perday$totalsteps, xlab='DATE', ylab = 'STEPS')
+summary(perday$totalsteps)
+```
+
+## 2. What is the average daily activity pattern?
+
+```{r}
+peri <- group_by(data, timeofday = data$interval)
+peri <- summarize(peri, avgsteps = mean(steps, na.rm=TRUE))
+plot(peri, type='l')
+```
+
+##3. Are there differences in activity patterns between weekdays and weekends?
+
+```{r}
+data$weekend <- 'week'
+data$weekend[data$dayoftheweek == 'Saturday' | data$dayoftheweek == 'Sunday'] <- 'weekend'
+periw <- group_by(data, timeofdayw = data$interval, weekender = data$weekend)
+periw <- summarize(periw, avgsteps = mean(steps, na.rm=TRUE))
+par(mfrow=c(1,2))
+plot(periw$timeofdayw[periw$weekender == 'week'], periw$avgsteps[periw$weekender == 'week'], type='l', main = 'WEEK', xlab='TIME', ylab = 'AVGSTEPS')
+plot(periw$timeofdayw[periw$weekender == 'weekend'], periw$avgsteps[periw$weekender == 'weekend'], type='l', main = 'WEEKEND', xlab='TIME', ylab = 'AVGSTEPS')
+library(ggplot2)
+qplot(periw$timeofdayw, periw$avgsteps, geom = c('line'), color=periw$weekender)
+```
