@@ -1,0 +1,49 @@
+---
+output: html_document
+---
+
+### Read data
+```{r, cache=TRUE}
+data <- read.csv('repdata%2Fdata%2FStormData.csv')
+```
+
+
+### Subset data
+
+Only keep relevant columns.
+
+```{r, cache=TRUE}
+library(dplyr)
+names(data)
+data1 <- select(data, BGN_DATE, STATE, EVTYPE, FATALITIES, INJURIES, PROPDMG, CROPDMG)
+```
+
+
+### 1. Across the United States, which types of events are most harmful with respect to population health?
+
+Looking at the total fatalities, total injuries and overall total.
+
+The last graph shows the most lethal event types.
+
+```{r, cache=TRUE}
+popharm <- group_by(data1, EVTYPE)
+popharmfat <- arrange(summarise(popharm, fatalities = sum(FATALITIES, na.rm = TRUE)), desc(fatalities))[1:15,]
+popharminj <-  arrange(summarise(popharm , injuries = sum(INJURIES, na.rm = TRUE)), desc(injuries))[1:15,]
+popharmtotal <- arrange(summarise(popharm , total = (sum(INJURIES, na.rm = TRUE) + sum(FATALITIES, na.rm = TRUE))), desc(total))[1:15,]
+popharmfatm <- arrange(summarise(popharm, fatalities = mean(FATALITIES, na.rm = TRUE)), desc(fatalities))[1:15,]
+
+
+popharmfat
+popharminj
+
+par(mfrow=c(1,1), mar=c(11,4,4,4))
+barplot(popharmfat$fatalities, names.arg = popharmfat$EVTYPE, ylim = c(0,10000), main = 'Fatalities', las=3)
+barplot(popharminj$injuries, names.arg = popharminj$EVTYPE, ylim = c(0,10000), main = 'Injuries', las=3)
+barplot(popharmtotal$total, names.arg = popharmtotal$EVTYPE, ylim = c(0,10000), main = 'Total', las=3)
+par(mfrow=c(1,1), mar=c(13,4,4,4))
+barplot(popharmfatm$fatalities, names.arg = popharmfatm$EVTYPE, main = 'Avg Fatalities', las=3)
+```
+
+Conclusion: a lot of event types are caategorized differently, although they encompass the same type of natural disaster. A  recoding of the event type is needed for a more precize analysis.
+
+### 2. Across the United States, which types of events have the greatest economic consequences?
